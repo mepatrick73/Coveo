@@ -56,6 +56,8 @@ public class Bot
 
         Debris[] targetableMeteors = gameMessage.Debris.Where(DebrisInfos => DebrisInfos.TeamId == null).ToArray();
 
+        Debris[] targetableMeteors = gameMessage.Debris.ToArray();
+
 
         //enlever les cibles qui ont deja ete tirees
 
@@ -64,16 +66,40 @@ public class Bot
 
         //selectionner la meilleure cible selon lheuristique
         var ourShip = this.gameMessage.Ships[gameMessage.CurrentTeamId];
-        FindBestTarget(ourShip.Stations.Turrets[0],gameMessage.Constants.Ship.Stations.TurretInfos[0],untargetedTargetableMeteors,out (double x,double y ) shotPosition);
-        if (shotPosition is { x: 0, y: 0 })
+        foreach (var turret in ourShip.Stations.Turrets.Where(turret => turret.Operator != null))
         {
-            return Array.Empty<Action>();
-        }
-            
-        Action orient = new TurretLookAtAction(gameMessage.Ships[gameMessage.CurrentTeamId].Stations.Turrets[0].Id,new Vector(shotPosition.x,shotPosition.y));
-        
-        Action shoot = new TurretShootAction(gameMessage.Ships[gameMessage.CurrentTeamId].Stations.Turrets[0].Id);
+            FindBestTarget(turret,gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType],untargetedTargetableMeteors,out (double x,double y ) shotPosition);
+            if (shotPosition is { x: 0, y: 0 })
+            {
+                return Array.Empty<Action>();
+            }
 
+            Action orient;
+
+            if(!gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType].Rotatable)
+                orient = new ShipLookAtAction(new Vector(shotPosition.x,shotPosition.y));
+            else
+            {
+                orient = new TurretLookAtAction(turret.Id,new Vector(shotPosition.x,shotPosition.y));
+            }
+
+            Action shoot = new TurretShootAction(turret.Id);
+            
+            actions.Add(orient);
+            actions.Add(shoot);
+        }
+        
+        
+
+
+
+
+
+        return actions;
+    }
+
+    private static void MOVECREW(GameMessage gameMessage, List<Action> actions)
+    {
         var myShip = gameMessage.Ships[gameMessage.CurrentTeamId];
         // var otherShipsIds = gameMessage.ShipsPositions.Keys.Where(shipId => shipId != gameMessage.CurrentTeamId)
         //     .ToList();
@@ -82,7 +108,6 @@ public class Bot
         var idleCrewmates = myShip.Crew
             .Where(crewmate => crewmate.CurrentStation == null && crewmate.Destination == null)
             .ToList();
-        
         foreach (var crewmate in idleCrewmates)
         {
             var visitableStations = crewmate.DistanceFromStations.Shields
@@ -90,27 +115,11 @@ public class Bot
                 .Concat(crewmate.DistanceFromStations.Helms)
                 .Concat(crewmate.DistanceFromStations.Radars)
                 .ToList();
-        
+         
             var stationToMoveTo = visitableStations[Random.Shared.Next(visitableStations.Count)];
-        
+         
             actions.Add(new CrewMoveAction(crewmate.Id, stationToMoveTo.StationPosition));
         }
-        //
-        // // Now crew members at stations should do something!
-        // var operatedTurretStations = myShip.Stations.Turrets.Where(turretStation => turretStation.Operator != null);
-        //
-        //
-        // var operatedHelmStation = myShip.Stations.Helms.Where(helmStation => helmStation.Operator != null);
-        //
-        //
-        // var operatedRadarStations = myShip.Stations.Radars.Where(radarStation => radarStation.Operator != null);
-        Console.WriteLine(orient);
-
-        Console.WriteLine(shoot);
-
-        actions.Add(orient);
-        actions.Add(shoot);
-        return actions;
     }
 
     private void FindBestTarget(TurretStation turretStation, TurretInfo turret,Debris[] targetableMeteors, out (double x, double y ) shotPosition)
@@ -119,17 +128,17 @@ public class Bot
 
         var bestShots = new List<Shot>();
 
-        foreach (var t in targetableMeteors)
+        foreach (var meteor in targetableMeteors)
         {
             var rocketPosition = turretStation;
 
             for (var currentTick = 0; currentTick < 1000; currentTick++)
             {
-                var nextPosition = PositionAt(t, currentTick);
+                var nextPosition = PositionAt(meteor, currentTick);
                 var distancesInCannonTicks = Distance(nextPosition, (rocketPosition.WorldPosition.X, rocketPosition.WorldPosition.Y)) /
                                              turret.RocketSpeed;
 
-                if (distancesInCannonTicks < currentTick && isInBounds(nextPosition))
+                if (distancesInCannonTicks < currentTick && isInBounds(nextPosition) && willCollide())
                 {
                     validShots.Add(new Shot()
                     {
@@ -137,7 +146,7 @@ public class Bot
                         totalTicks = currentTick,
                         X = nextPosition.x,
                         Y = nextPosition.y,
-                        target = t
+                        target = meteor
                     });
 
                 }
@@ -177,7 +186,7 @@ public class Bot
 
     private bool isInBounds((double x, double y) position)
     {
-        if (position.x > 1200 || position.x < 140 || position.y > 800 || position.y < 0)
+        if (position.x > gameMessage.Constants.World.Width || position.x < 140 || position.y > gameMessage.Constants.World.Height || position.y < 0)
         {
             return false;
         }
