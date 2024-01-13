@@ -30,7 +30,9 @@ public class Bot
         this.gameMessage = gameMessage;
 
         Debris[] targetableMeteors = gameMessage.Debris.ToArray();
-
+        Debris[] untargetedTargetableMeteors =
+            targetableMeteors.Except(targetedMeteors.Keys, new DebrisEqualityComparer()).ToArray();
+        
         var ourShip = this.gameMessage.Ships[gameMessage.CurrentTeamId];
         if (gameMessage.CurrentTickNumber == 1)
         {
@@ -40,43 +42,38 @@ public class Bot
         }
         //enlever les cibles qui ont deja ete tirees
 
-        Debris[] untargetedTargetableMeteors =
-            targetableMeteors.Except(targetedMeteors.Keys, new DebrisEqualityComparer()).ToArray();
-
-        //selectionner la meilleure cible selon lheuristique
         foreach (var turret in ourShip.Stations.Turrets.Where(turret => turret.Operator != null))
         {
-            FindBestTarget(turret,gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType],untargetedTargetableMeteors,out (double x,double y ) shotPosition, ourShip.WorldPosition, gameMessage.Constants.Ship.Stations.Shield.ShieldRadius);
-            if (shotPosition is { x: 0, y: 0 })
-            {
-                return Array.Empty<Action>();
-            }
-
             Action orient;
 
-            if (!gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType].Rotatable)
+            if (turret.TurretType == TurretType.EMP)
             {
-               // var otherShipsIds = gameMessage.Ships.FirstOrDefault(shipId => shipId.Value.TeamId != gameMessage.CurrentTeamId);
-                orient = new ShipLookAtAction(new Vector(gameMessage.Ships.First().Value.WorldPosition.X,
-                    gameMessage.Ships.First().Value.WorldPosition.Y));
+                orient = new TurretLookAtAction(turret.Id,new Vector(gameMessage.Ships.First().Value.WorldPosition.X, gameMessage.Ships.First().Value.WorldPosition.Y)); // changer avant la compet pour le premier ennemi
             }
             else
             {
+                FindBestTarget(turret,gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType],untargetedTargetableMeteors,out (double x,double y ) shotPosition, ourShip.WorldPosition, gameMessage.Constants.Ship.Stations.Shield.ShieldRadius);
+                
                 orient = new TurretLookAtAction(turret.Id,new Vector(shotPosition.x,shotPosition.y));
-            }
 
+            }
+            
+            if (!gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType].Rotatable)
+            {
+                // var otherShipsIds = gameMessage.Ships.FirstOrDefault(shipId => shipId.Value.TeamId != gameMessage.CurrentTeamId);
+                actions.Add(new ShipLookAtAction(new Vector(gameMessage.Ships.First().Value.WorldPosition.X,
+                    gameMessage.Ships.First().Value.WorldPosition.Y))); 
+            }
+ 
             Action shoot = new TurretShootAction(turret.Id);
             
             actions.Add(orient);
             actions.Add(shoot);
         }
-        
-        
-        
-        
-        
 
 
+
+        //selectionner la meilleure cible selon lheuristique
 
 
         return actions;
