@@ -28,45 +28,22 @@ public class Bot
     {
         var actions = new List<Action>();
         this.gameMessage = gameMessage;
-    //     string our_team = gameMessage.CurrentTeamId;
-    //     Ship ship = gameMessage.Ships[our_team];
-    //     List<Crewmate> crew = ship.Crew.ToList();
-    //     Console.WriteLine(ship.Stations.Turrets);
-    //     
-    // var turretStations = ship.Stations.Turrets
-    //     .Where(turret =>
-    //         turret.TurretType == TurretType.EMP ||
-    //         turret.TurretType == TurretType.Sniper ||
-    //         turret.TurretType == TurretType.Fast ||
-    //         turret.TurretType == TurretType.Normal||
-    //         turret.TurretType == TurretType.Cannon)
-    //     .GroupBy(turret => turret.TurretType)
-    //     .SelectMany(group => group.Take(1))
-    //     .ToList();
-    // Console.WriteLine(turretStations.ToString());
-    // Console.WriteLine("yoooooo");
-    //     var crewmateManager = new CrewmateManager(crew,turretStations);
-    //     List<Station> turret_dict = new List<Station>();
-    //     turret_dict.AddRange(turretStations);
-    //     Tuple<ActionGroup, int> temp = crewmateManager.moveCrewmates(turret_dict);
-    //         foreach (var t_action in temp.Item1.GetActions())
-    //         {
-    //             actions.Add(t_action);
-    //         }
-        
-
-        Debris[] targetableMeteors = gameMessage.Debris.Where(DebrisInfos => DebrisInfos.TeamId == null).ToArray();
 
         Debris[] targetableMeteors = gameMessage.Debris.ToArray();
 
-
+        var ourShip = this.gameMessage.Ships[gameMessage.CurrentTeamId];
+        if (gameMessage.CurrentTickNumber == 1)
+        {
+            CrewmateManager crewmateManager = new CrewmateManager(ourShip.Crew.ToList());
+    
+            actions.AddRange(crewmateManager.moveCrewmates(ourShip.Stations.Turrets.ToList<Station>().GetRange(0,4)).Item1.GetActions());
+        }
         //enlever les cibles qui ont deja ete tirees
 
         Debris[] untargetedTargetableMeteors =
             targetableMeteors.Except(targetedMeteors.Keys, new DebrisEqualityComparer()).ToArray();
 
         //selectionner la meilleure cible selon lheuristique
-        var ourShip = this.gameMessage.Ships[gameMessage.CurrentTeamId];
         foreach (var turret in ourShip.Stations.Turrets.Where(turret => turret.Operator != null))
         {
             FindBestTarget(turret,gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType],untargetedTargetableMeteors,out (double x,double y ) shotPosition, ourShip.WorldPosition, gameMessage.Constants.Ship.Stations.Shield.ShieldRadius);
@@ -77,8 +54,12 @@ public class Bot
 
             Action orient;
 
-            if(!gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType].Rotatable)
-                orient = new ShipLookAtAction(new Vector(shotPosition.x,shotPosition.y));
+            if (!gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType].Rotatable)
+            {
+               // var otherShipsIds = gameMessage.Ships.FirstOrDefault(shipId => shipId.Value.TeamId != gameMessage.CurrentTeamId);
+                orient = new ShipLookAtAction(new Vector(gameMessage.Ships.First().Value.WorldPosition.X,
+                    gameMessage.Ships.First().Value.WorldPosition.Y));
+            }
             else
             {
                 orient = new TurretLookAtAction(turret.Id,new Vector(shotPosition.x,shotPosition.y));
@@ -91,7 +72,9 @@ public class Bot
         }
         
         
-
+        
+        
+        
 
 
 

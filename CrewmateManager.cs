@@ -11,7 +11,7 @@ public class CrewmateManager
     private List<TurretStation> pTurretStation;
     private bool isThereTwoPeopleWithTheSameGoal;
 
-    public CrewmateManager(List<Crewmate> pCrewmates, List<TurretStation> pTurretStation)
+    public CrewmateManager(List<Crewmate> pCrewmates)
     {
         this.crewmates = pCrewmates;
         this.pTurretStation = pTurretStation;
