@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 
 namespace Application.Actions;
 
@@ -69,6 +69,17 @@ public class MathUtil
     public static double Dot(Vector a, Vector b)
     {
         return a.X * b.X + a.Y * b.Y;
+    }
+}
+
+public class MoveAction : ActionGroup
+{
+    public MoveAction(Dictionary<string, Vector> dict)
+    {
+        foreach (var pair in dict)
+        {
+            Add(new CrewMoveAction(pair.Key, pair.Value));
+        }
     }
 }
 
