@@ -1,0 +1,3 @@
+﻿C#
+Build: dotnet publish -o bot
+Run: dotnet bot/Application.dll
