@@ -122,6 +122,11 @@ public class MathUtil
     {
         return Math.Pow(a.X, 2) + Math.Pow(a.Y, 2);
     }
+    
+    public static Vector FromAngle(double angle)
+    {
+        return new Vector(Math.Cos(angle), Math.Sin(angle));
+    }
 }
 
 public class Ray
