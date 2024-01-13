@@ -42,6 +42,17 @@ public class Bot
                 CrewmateManager crewmateManager = new CrewmateManager(ourShip.Crew.ToList());
     
                 actions.AddRange(crewmateManager.moveCrewmates(ourShip.Stations.Turrets.ToList<Station>().GetRange(0,4)));
+                //CrewmateManager crewmateManager2 = new CrewmateManager(ourShip.Crew.ToList().GetRange(3,1));
+               // List<Station> helm = new List<Station>(ourShip.Stations.Helms.Take(1).ToList());
+               // actions.AddRange(crewmateManager2.moveCrewmates(helm).Item1.GetActions());
+            }
+            if (gameMessage.CurrentTickNumber % 1000 == 0)
+            {
+                foreach (var crewmate in ourShip.Crew.ToList().GetRange(0,4))
+                {
+  
+
+                }
             }
 
         }
@@ -49,6 +60,10 @@ public class Bot
         {
             MOVECREW(gameMessage, actions);
         }
+        
+        
+        
+        
       
         //enlever les cibles qui ont deja ete tirees
 
@@ -63,16 +78,22 @@ public class Bot
             else
             {
                 FindBestTarget(turret,gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType],untargetedTargetableMeteors,out (double x,double y ) shotPosition, ourShip.WorldPosition, gameMessage.Constants.Ship.Stations.Shield.ShieldRadius);
-                
-                orient = new TurretLookAtAction(turret.Id,new Vector(shotPosition.x,shotPosition.y));
+                if (shotPosition is { x: 0, y: 0 })
+                {
+                    orient = new TurretLookAtAction(turret.Id,new Vector(theirShips.First().Value.X,theirShips.First().Value.Y));
+                }
+                else
+                {
+                    orient = new TurretLookAtAction(turret.Id,new Vector(shotPosition.x,shotPosition.y));
+                }
 
             }
             
             if (!gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType].Rotatable)
             {
-                // var otherShipsIds = gameMessage.Ships.FirstOrDefault(shipId => shipId.Value.TeamId != gameMessage.CurrentTeamId);
                 actions.Add(new ShipLookAtAction(new Vector(theirShips.First().Value.X,
-                    gameMessage.Ships.First().Value.WorldPosition.Y))); 
+                    theirShips.First().Value.Y))); 
+                //actions = actions.Concat(PositionWeaponTowardsFirstEnemy(new Vector(theirShips.First().Value.X, theirShips.First().Value.Y))).ToList(); 
             }
  
             Action shoot = new TurretShootAction(turret.Id);
@@ -231,16 +252,16 @@ public class Bot
 
             var actions = new List<Action>();
             if (Math.Abs(MathUtil.AngleBetween(MathUtil.Subtract(enemyShip, ownShipPosition),
-                    MathUtil.Subtract(weaponToShootFrom.WorldPosition, ownShipPosition))) > 1e-3f)
+                    MathUtil.FromAngleDegrees(weaponAngle))) > 1e-3f)
             {
                 actions.Add(new ShipRotateAction(Math.Abs(MathUtil.AngleBetween(
                     MathUtil.Subtract(enemyShip, ownShipPosition),
-                    MathUtil.Subtract(weaponToShootFrom.WorldPosition, ownShipPosition)))));
+                    MathUtil.FromAngleDegrees(weaponAngle)))));
             }
 
             return actions;
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             return new List<Action>();
         }

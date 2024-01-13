@@ -127,6 +127,11 @@ public class MathUtil
     {
         return new Vector(Math.Cos(angle), Math.Sin(angle));
     }
+
+    public static Vector FromAngleDegrees(double angle)
+    {
+        return FromAngle(angle * Math.PI / 180);
+    }
 }
 
 public class Ray
