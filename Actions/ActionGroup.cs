@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Xml.Schema;
 
 namespace Application.Actions;
 
@@ -104,9 +105,12 @@ public class BreakShieldAction : ActionGroup
         {
             while (remainingAngleForShipWeaponsToFaceTarget > 0)
             {
-                remainingAngleForShipWeaponsToFaceTarget -= gameState.Constants.Ship.MaxRotationDegrees;
-                turnCount++;
-                Add(new ShipRotateAction(gameState.Constants.Ship.MaxRotationDegrees));
+                foreach(var helm in helmActions)
+                {
+                    remainingAngleForShipWeaponsToFaceTarget -= gameState.Constants.Ship.MaxRotationDegrees;
+                    turnCount++;
+                    helm.Value.Add(new CustomAction(new ShipRotateAction(gameState.Constants.Ship.MaxRotationDegrees)));
+                }
             }
         }
         
@@ -119,17 +123,17 @@ public class BreakShieldAction : ActionGroup
             while (remainingAngle > 0)
             {
                 remainingAngle -= gameState.Constants.Ship.MaxRotationDegrees;
-                Add(new TurretRotateAction(turret.Key.Id, gameState.Constants.Ship.MaxRotationDegrees));
+                turret.Value.Add(new CustomAction(new TurretRotateAction(turret.Key.Id, gameState.Constants.Ship.MaxRotationDegrees)));
             }
             
             int remainingChargeTurns = shootingTurn;
             while (remainingChargeTurns > 0)
             {
-                Add(new TurretChargeAction(turret.Key.Id));
+                turret.Value.Add(new CustomAction(new TurretChargeAction(turret.Key.Id)));
                 --remainingChargeTurns;
             }
             
-            Add(new TurretShootAction(turret.Key.Id));
+            turret.Value.Add(new CustomAction(new TurretShootAction(turret.Key.Id)));
         }
 
         // Turrets that can't rotate
@@ -139,14 +143,46 @@ public class BreakShieldAction : ActionGroup
             int remainingChargeTurns = shootingTurn;
             while (remainingChargeTurns > 0)
             {
-                Add(new TurretChargeAction(turret.Key.Id));
+                turret.Value.Add(new CustomAction(new TurretChargeAction(turret.Key.Id)));
                 --remainingChargeTurns;
             }
             
             if(helmActions.Count != 0)
             {
-                Add(new TurretShootAction(turret.Key.Id));
+                turret.Value.Add(new CustomAction(new TurretShootAction(turret.Key.Id)));
             }
+        }
+        
+        // Add all actions to the action group
+        int index = 0;
+        bool actionAdded = true;
+        
+        while (actionAdded)
+        {
+            actionAdded = false;
+            foreach (var helm in helmActions)
+            {
+                if (index >= helm.Value.Count)
+                {
+                    continue;
+                }
+                
+                Add(helm.Value[index].Action);
+                actionAdded = true;
+            }
+            
+            foreach (var turret in turretActions)
+            {
+                if (index >= turret.Value.Count)
+                {
+                    continue;
+                }
+                
+                Add(turret.Value[index].Action);
+                actionAdded = true;
+            }
+            
+            ++index;
         }
     }
 }
