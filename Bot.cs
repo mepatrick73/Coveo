@@ -220,20 +220,32 @@ public class Bot
 
     private List<Action> PositionWeaponTowardsFirstEnemy()
     {
-        var enemyShip = gameMessage.Ships.Where(ship => ship.Key != gameMessage.CurrentTeamId).ToList().First(ship =>ship.Value.CurrentHealth > 0).Value;
-        var weaponToShootFrom = gameMessage.Ships[gameMessage.CurrentTeamId].Stations.Turrets.Where(turret => !gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType].Rotatable && turret.Operator != null).ToList().First();
-        var weaponAngle = weaponToShootFrom.OrientationDegrees;
-        var ownShipPosition = gameMessage.Ships[gameMessage.CurrentTeamId].WorldPosition;
-
-        var actions = new List<Action>();
-        while (Math.Abs(MathUtil.AngleBetween(ownShipPosition, enemyShip.WorldPosition) - MathUtil.AngleBetween(weaponToShootFrom.WorldPosition, enemyShip.WorldPosition)) > 1e-6f)
+        try
         {
-            actions.Add(new ShipRotateAction(Math.Abs(MathUtil.AngleBetween(ownShipPosition, enemyShip.WorldPosition)
-                                                      - MathUtil.AngleBetween(weaponToShootFrom.WorldPosition,
-                                                          enemyShip.WorldPosition))));
+            var enemyShip = gameMessage.Ships.Where(ship => ship.Key != gameMessage.CurrentTeamId).ToList()
+                .First(ship => ship.Value.CurrentHealth > 0).Value;
+            var weaponToShootFrom = gameMessage.Ships[gameMessage.CurrentTeamId].Stations.Turrets.Where(turret =>
+                !gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType].Rotatable &&
+                turret.Operator != null).ToList().First();
+            var weaponAngle = weaponToShootFrom.OrientationDegrees;
+            var ownShipPosition = gameMessage.Ships[gameMessage.CurrentTeamId].WorldPosition;
+
+            var actions = new List<Action>();
+            while (Math.Abs(MathUtil.AngleBetween(ownShipPosition, enemyShip.WorldPosition) -
+                            MathUtil.AngleBetween(weaponToShootFrom.WorldPosition, enemyShip.WorldPosition)) > 1e-6f)
+            {
+                actions.Add(new ShipRotateAction(Math.Abs(
+                    MathUtil.AngleBetween(ownShipPosition, enemyShip.WorldPosition)
+                    - MathUtil.AngleBetween(weaponToShootFrom.WorldPosition,
+                        enemyShip.WorldPosition))));
+            }
+
+            return actions;
         }
-        
-        return actions;
+        catch (Exception e)
+        {
+            return new List<Action>();
+        }
     }
 
     class DebrisEqualityComparer : IEqualityComparer<Debris>
