@@ -56,45 +56,51 @@ public class CrewmateManager
 
     public Tuple<ActionGroup, int> moveCrewmates(List<Station> plannedStation)
     {
-        if (plannedStation.Count == 0)
-        {
-            return new Tuple<ActionGroup, int>(new MoveAction(new Dictionary<string, Vector>()), 0);
-        }
-        int numberOfCrewMatesNeeded = plannedStation.Count;
-        List<Crewmate[]> crewmatePermutation =
-            heapPermutation(crewmates.ToArray(), Math.Min(plannedStation.Count(), crewmates.Count), this.crewmates.Count);
-        int shortest_time = Int32.MaxValue;
-        List<Crewmate> shortest_permutation = new List<Crewmate>();
-        foreach (var permutation in crewmatePermutation)
-        {
-            int longest_crewmate = 0;
-            for (int i = 0; i < numberOfCrewMatesNeeded; i++)
-            {
-                Crewmate currCrewmate = permutation[i];
-                int time_taken = getDistanceToStation(currCrewmate, plannedStation[i].Id);
-                if (time_taken > longest_crewmate)
-                {
-                    longest_crewmate = time_taken;
-                }
-            }
-
-            if (shortest_time > longest_crewmate)
-            {
-                shortest_permutation = permutation.ToList();
-                shortest_time = longest_crewmate;
-            }
-        }
-
         Dictionary<string, Vector> dict = new Dictionary<String,Vector>();
-        for (int i = 0; i < shortest_permutation.Count ; i++)
+        for (int i = 0; i < Math.Min(plannedStation.Count, crewmates.Count) ; i++)
         {
-            Console.WriteLine(numberOfCrewMatesNeeded);
-            Console.WriteLine(crewmates.Count);
-            dict[shortest_permutation[i].Id] = plannedStation[i].GridPosition;
+            dict[crewmates[i].Id] = plannedStation[i].GridPosition;
         }
+        return new Tuple<ActionGroup,int>(new MoveAction(dict),0);
+        // if (plannedStation.Count == 0)
+        // {
+        //     return new Tuple<ActionGroup, int>(new MoveAction(new Dictionary<string, Vector>()), 0);
+        // }
+        // int numberOfCrewMatesNeeded = plannedStation.Count;
+        // List<Crewmate[]> crewmatePermutation =
+        //     heapPermutation(crewmates.ToArray(), Math.Min(plannedStation.Count(), crewmates.Count), this.crewmates.Count);
+        // int shortest_time = Int32.MaxValue;
+        // List<Crewmate> shortest_permutation = new List<Crewmate>();
+        // foreach (var permutation in crewmatePermutation)
+        // {
+        //     int longest_crewmate = 0;
+        //     for (int i = 0; i < numberOfCrewMatesNeeded; i++)
+        //     {
+        //         Crewmate currCrewmate = permutation[i];
+        //         int time_taken = getDistanceToStation(currCrewmate, plannedStation[i].Id);
+        //         if (time_taken > longest_crewmate)
+        //         {
+        //             longest_crewmate = time_taken;
+        //         }
+        //     }
+        //
+        //     if (shortest_time > longest_crewmate)
+        //     {
+        //         shortest_permutation = permutation.ToList();
+        //         shortest_time = longest_crewmate;
+        //     }
+        // }
+        //
+        // Dictionary<string, Vector> dict = new Dictionary<String,Vector>();
+        // for (int i = 0; i < shortest_permutation.Count ; i++)
+        // {
+        //     Console.WriteLine(numberOfCrewMatesNeeded);
+        //     Console.WriteLine(crewmates.Count);
+        //     dict[shortest_permutation[i].Id] = plannedStation[i].GridPosition;
+        // }
 
         
-        return new Tuple<ActionGroup,int>(new MoveAction(dict),shortest_time);
+        // return new Tuple<ActionGroup,int>(new MoveAction(dict),shortest_time);
     }
 
     private int getDistanceToStation(Crewmate crewmate, string stationId)
