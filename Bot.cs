@@ -224,25 +224,24 @@ public class Bot
         {
             var enemyShip = gameMessage.Ships.Where(ship => ship.Key != gameMessage.CurrentTeamId).ToList()
                 .First(ship => ship.Value.CurrentHealth > 0).Value;
+
             var weaponToShootFrom = gameMessage.Ships[gameMessage.CurrentTeamId].Stations.Turrets.Where(turret =>
-                !gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType].Rotatable &&
-                turret.Operator != null).ToList().First();
+                !gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType].Rotatable).ToList().First();
             var weaponAngle = weaponToShootFrom.OrientationDegrees;
             var ownShipPosition = gameMessage.Ships[gameMessage.CurrentTeamId].WorldPosition;
 
             var actions = new List<Action>();
-            while (Math.Abs(MathUtil.AngleBetween(ownShipPosition, enemyShip.WorldPosition) -
-                            MathUtil.AngleBetween(weaponToShootFrom.WorldPosition, enemyShip.WorldPosition)) > 1e-6f)
+            if (Math.Abs(MathUtil.AngleBetween(MathUtil.Subtract(enemyShip.WorldPosition, ownShipPosition),
+                    MathUtil.Subtract(weaponToShootFrom.WorldPosition, ownShipPosition))) > 1e-3f)
             {
-                actions.Add(new ShipRotateAction(Math.Abs(
-                    MathUtil.AngleBetween(ownShipPosition, enemyShip.WorldPosition)
-                    - MathUtil.AngleBetween(weaponToShootFrom.WorldPosition,
-                        enemyShip.WorldPosition))));
+                actions.Add(new ShipRotateAction(Math.Abs(MathUtil.AngleBetween(
+                    MathUtil.Subtract(enemyShip.WorldPosition, ownShipPosition),
+                    MathUtil.Subtract(weaponToShootFrom.WorldPosition, ownShipPosition)))));
             }
 
             return actions;
         }
-        catch (Exception e)
+        catch(Exception e)
         {
             return new List<Action>();
         }
