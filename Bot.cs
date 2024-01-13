@@ -211,8 +211,7 @@ public class Bot
         var ownShipPosition = gameMessage.Ships[gameMessage.CurrentTeamId].WorldPosition;
 
         var actions = new List<Action>();
-        while (MathUtil.AngleBetween(ownShipPosition, enemyShip.WorldPosition) !=
-               MathUtil.AngleBetween(weaponToShootFrom.WorldPosition, enemyShip.WorldPosition))
+        while (Math.Abs(MathUtil.AngleBetween(ownShipPosition, enemyShip.WorldPosition) - MathUtil.AngleBetween(weaponToShootFrom.WorldPosition, enemyShip.WorldPosition)) < 1e-6f)
         {
             actions.Add(new ShipRotateAction(Math.Abs(MathUtil.AngleBetween(ownShipPosition, enemyShip.WorldPosition)
                                                       - MathUtil.AngleBetween(weaponToShootFrom.WorldPosition,
