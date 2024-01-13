@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Application.Actions;
 using Microsoft.VisualBasic.CompilerServices;
 
@@ -56,9 +56,13 @@ public class CrewmateManager
 
     public Tuple<ActionGroup, int> moveCrewmates(List<Station> plannedStation)
     {
+        if (plannedStation.Count == 0)
+        {
+            return new Tuple<ActionGroup, int>(new MoveAction(new Dictionary<string, Vector>()), 0);
+        }
         int numberOfCrewMatesNeeded = plannedStation.Count;
         List<Crewmate[]> crewmatePermutation =
-            heapPermutation(crewmates.ToArray(), numberOfCrewMatesNeeded, this.crewmates.Count);
+            heapPermutation(crewmates.ToArray(), Math.Min(plannedStation.Count(), crewmates.Count), this.crewmates.Count);
         int shortest_time = Int32.MaxValue;
         List<Crewmate> shortest_permutation = new List<Crewmate>();
         foreach (var permutation in crewmatePermutation)
@@ -82,7 +86,7 @@ public class CrewmateManager
         }
 
         Dictionary<string, Vector> dict = new Dictionary<String,Vector>();
-        for (int i = 0; i < numberOfCrewMatesNeeded ; i++)
+        for (int i = 0; i < shortest_permutation.Count ; i++)
         {
             Console.WriteLine(numberOfCrewMatesNeeded);
             Console.WriteLine(crewmates.Count);
