@@ -10,7 +10,12 @@ public static class Application
             e.Cancel = true;
             cts.Cancel();
         };
-
+        #if DEBUG
+            await Task.WhenAll(GameClient.RunAsync(Bot.NAME, cts.Token),
+                                GameClient.RunAsync(Bot.NAME, cts.Token));
+            #else
+        
         await GameClient.RunAsync(Bot.NAME, cts.Token);
+        #endif
     }
 }
