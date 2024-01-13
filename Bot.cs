@@ -251,16 +251,16 @@ public class Bot
 
             var actions = new List<Action>();
             if (Math.Abs(MathUtil.AngleBetween(MathUtil.Subtract(enemyShip, ownShipPosition),
-                    MathUtil.Subtract(weaponToShootFrom.WorldPosition, ownShipPosition))) > 1e-3f)
+                    MathUtil.FromAngleDegrees(weaponAngle))) > 1e-3f)
             {
                 actions.Add(new ShipRotateAction(Math.Abs(MathUtil.AngleBetween(
                     MathUtil.Subtract(enemyShip, ownShipPosition),
-                    MathUtil.Subtract(weaponToShootFrom.WorldPosition, ownShipPosition)))));
+                    MathUtil.FromAngleDegrees(weaponAngle)))));
             }
 
             return actions;
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             return new List<Action>();
         }
