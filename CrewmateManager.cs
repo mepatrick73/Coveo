@@ -1,14 +1,18 @@
-﻿namespace Application;
+﻿using Application.Actions;
+
+namespace Application;
 
 
 public class CrewmateManager
 {
     private List<Crewmate> crewmates;
+    private bool isThereTwoPeopleWithTheSameGoal;
 
     public CrewmateManager(List<Crewmate> pCrewmates)
     {
         this.crewmates = pCrewmates;
-        if (checkIfItMakeSense())
+        this.isThereTwoPeopleWithTheSameGoal = checkIfItMakeSense();
+        if (isThereTwoPeopleWithTheSameGoal)
         {
             Console.WriteLine("There is two crewmates with the same goal");
         }
@@ -32,49 +36,24 @@ public class CrewmateManager
         return true;
     }
 
-    private bool CrewHaveSameGoal(Crewmate crewmate, Crewmate other_crewmate)
+    //return the Destination if the crewmate has one, otherwise returns the current position
+    private Vector GetGoal(Crewmate crewmate)
     {
         if (crewmate.Destination != null)
         {
-            if (other_crewmate.Destination != null)
-            {
-                {
-                    if (crewmate.Destination.Equals(other_crewmate.Destination))
-                    {
-                        return true;
-                    }
-                }
-            }
-            else
-            {
-                {
-                    if (crewmate.Destination.Equals(other_crewmate.GridPosition))
-                    {
-                        return true;
-                    }
-                }
-            }
+            return crewmate.Destination;
         }
-        else
-        {
-            if (other_crewmate.Destination != null)
-            {
-                if (other_crewmate.Destination.Equals(crewmate.GridPosition))
-                {
-                    return true;
-                }
-            }
-            else
-            {
-                if (crewmate.GridPosition.Equals(other_crewmate.GridPosition))
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return crewmate.GridPosition;
+    }
+    private bool CrewHaveSameGoal(Crewmate crewmate, Crewmate other_crewmate)
+    {
+        return GetGoal(crewmate).Equals(GetGoal(other_crewmate));
     }
 
+    public Tuple<ActionGroup, int> moveCrewmates(Dictionary<TurretType, int> plannedState)
+    {
+        return null;
+    }
 
     public Crewmate? GetCrewmateFromId(string Id)
     {
