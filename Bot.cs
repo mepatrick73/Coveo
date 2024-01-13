@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Application.Actions;
 
 namespace Application;
@@ -201,6 +201,25 @@ public class Bot
     private (double x, double y) PositionAt(Projectile projectile, int t)
     {
         return (projectile.Position.X + projectile.Velocity.X * t, projectile.Position.Y + projectile.Velocity.Y * t);
+    }
+
+    private List<Action> PositionWeaponTowardsFirstEnemy()
+    {
+        var enemyShip = gameMessage.Ships.Where(ship => ship.Key != gameMessage.CurrentTeamId).ToList().First(ship =>ship.Value.CurrentHealth > 0).Value;
+        var weaponToShootFrom = gameMessage.Ships[gameMessage.CurrentTeamId].Stations.Turrets.Where(turret => !gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType].Rotatable && turret.Operator != null).ToList().First();
+        var weaponAngle = weaponToShootFrom.OrientationDegrees;
+        var ownShipPosition = gameMessage.Ships[gameMessage.CurrentTeamId].WorldPosition;
+
+        var actions = new List<Action>();
+        while (MathUtil.AngleBetween(ownShipPosition, enemyShip.WorldPosition) !=
+               MathUtil.AngleBetween(weaponToShootFrom.WorldPosition, enemyShip.WorldPosition))
+        {
+            actions.Add(new ShipRotateAction(Math.Abs(MathUtil.AngleBetween(ownShipPosition, enemyShip.WorldPosition)
+                                                      - MathUtil.AngleBetween(weaponToShootFrom.WorldPosition,
+                                                          enemyShip.WorldPosition))));
+        }
+        
+        return actions;
     }
 
     class DebrisEqualityComparer : IEqualityComparer<Debris>
