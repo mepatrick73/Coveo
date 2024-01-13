@@ -41,7 +41,7 @@ public class Bot
             {
                 CrewmateManager crewmateManager = new CrewmateManager(ourShip.Crew.ToList());
     
-                actions.AddRange(crewmateManager.moveCrewmates(ourShip.Stations.Turrets.ToList<Station>().GetRange(0,4)).Item1.GetActions());
+                actions.AddRange(crewmateManager.moveCrewmates(ourShip.Stations.Turrets.ToList<Station>().GetRange(0,4)));
             }
 
         }

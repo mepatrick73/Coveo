@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Application.Actions;
 using Microsoft.VisualBasic.CompilerServices;
 
 namespace Application;
@@ -54,14 +53,15 @@ public class CrewmateManager
         return GetGoal(crewmate).Equals(GetGoal(other_crewmate));
     }
 
-    public Tuple<ActionGroup, int> moveCrewmates(List<Station> plannedStation)
+    public List<CrewMoveAction> moveCrewmates(List<Station> plannedStation)
     {
-        Dictionary<string, Vector> dict = new Dictionary<String,Vector>();
+       var list = new List<CrewMoveAction>();
         for (int i = 0; i < Math.Min(plannedStation.Count, crewmates.Count) ; i++)
         {
-            dict[crewmates[i].Id] = plannedStation[i].GridPosition;
+            list.Add(new CrewMoveAction(crewmates[i].Id,plannedStation[i].GridPosition));
         }
-        return new Tuple<ActionGroup,int>(new MoveAction(dict),0);
+
+        return list;
         // if (plannedStation.Count == 0)
         // {
         //     return new Tuple<ActionGroup, int>(new MoveAction(new Dictionary<string, Vector>()), 0);
@@ -99,7 +99,7 @@ public class CrewmateManager
         //     dict[shortest_permutation[i].Id] = plannedStation[i].GridPosition;
         // }
 
-        
+
         // return new Tuple<ActionGroup,int>(new MoveAction(dict),shortest_time);
     }
 
