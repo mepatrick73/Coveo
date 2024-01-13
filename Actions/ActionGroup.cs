@@ -119,6 +119,17 @@ public class MathUtil
     }
 }
 
+public class MoveAction : ActionGroup
+{
+    public MoveAction(Dictionary<string, Vector> dict)
+    {
+        foreach (var pair in dict)
+        {
+            Add(new CrewMoveAction(pair.Key, pair.Value));
+        }
+    }
+}
+
 public class BreakShieldAction : ActionGroup
 {
     public BreakShieldAction(GameMessage gameState, Vector shipPosition)
