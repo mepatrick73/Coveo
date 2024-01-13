@@ -93,6 +93,11 @@ public class MathUtil
         return new Vector(a.X * cos - a.Y * sin, a.X * sin + a.Y * cos);
     }
     
+    public static Vector RotateDegrees(Vector a, double degrees)
+    {
+        return Rotate(a, degrees * Math.PI / 180);
+    }
+    
     public static Vector Subtract(Vector a, Vector b)
     {
         return new Vector(a.X - b.X, a.Y - b.Y);
@@ -116,6 +121,23 @@ public class MathUtil
     public static double LengthSquared(Vector a)
     {
         return Math.Pow(a.X, 2) + Math.Pow(a.Y, 2);
+    }
+}
+
+public class Ray
+{
+    public Ray(Vector origin, Vector direction)
+    {
+        Origin = origin;
+        Direction = direction;
+    }
+
+    public Vector Origin { get; set; }
+    public Vector Direction { get; set; }
+
+    public Vector GetPoint(double distance)
+    {
+        return MathUtil.Add(Origin, MathUtil.Multiply(Direction, distance));
     }
 }
 
