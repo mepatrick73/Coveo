@@ -34,12 +34,22 @@ public class Bot
             targetableMeteors.Except(targetedMeteors.Keys, new DebrisEqualityComparer()).ToArray();
         
         var ourShip = this.gameMessage.Ships[gameMessage.CurrentTeamId];
-        if (gameMessage.CurrentTickNumber == 1)
+        var theirShips = this.gameMessage.ShipsPositions.Where(ship => ship.Key != gameMessage.CurrentTeamId).ToList();
+        try
         {
-            CrewmateManager crewmateManager = new CrewmateManager(ourShip.Crew.ToList());
+            if (gameMessage.CurrentTickNumber == 1)
+            {
+                CrewmateManager crewmateManager = new CrewmateManager(ourShip.Crew.ToList());
     
-            actions.AddRange(crewmateManager.moveCrewmates(ourShip.Stations.Turrets.ToList<Station>().GetRange(0,4)).Item1.GetActions());
+                actions.AddRange(crewmateManager.moveCrewmates(ourShip.Stations.Turrets.ToList<Station>().GetRange(0,4)).Item1.GetActions());
+            }
+
         }
+        catch (Exception e)
+        {
+            MOVECREW(gameMessage, actions);
+        }
+      
         //enlever les cibles qui ont deja ete tirees
 
         foreach (var turret in ourShip.Stations.Turrets.Where(turret => turret.Operator != null))
@@ -48,7 +58,7 @@ public class Bot
 
             if (turret.TurretType == TurretType.EMP)
             {
-                orient = new TurretLookAtAction(turret.Id,new Vector(gameMessage.Ships.First().Value.WorldPosition.X, gameMessage.Ships.First().Value.WorldPosition.Y)); // changer avant la compet pour le premier ennemi
+                orient = new TurretLookAtAction(turret.Id,new Vector(theirShips.First().Value.X, theirShips.First().Value.Y)); // changer avant la compet pour le premier ennemi
             }
             else
             {
@@ -61,7 +71,7 @@ public class Bot
             if (!gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType].Rotatable)
             {
                 // var otherShipsIds = gameMessage.Ships.FirstOrDefault(shipId => shipId.Value.TeamId != gameMessage.CurrentTeamId);
-                actions.Add(new ShipLookAtAction(new Vector(gameMessage.Ships.First().Value.WorldPosition.X,
+                actions.Add(new ShipLookAtAction(new Vector(theirShips.First().Value.X,
                     gameMessage.Ships.First().Value.WorldPosition.Y))); 
             }
  

@@ -84,6 +84,8 @@ public class CrewmateManager
         Dictionary<string, Vector> dict = new Dictionary<String,Vector>();
         for (int i = 0; i < numberOfCrewMatesNeeded ; i++)
         {
+            Console.WriteLine(numberOfCrewMatesNeeded);
+            Console.WriteLine(crewmates.Count);
             dict[shortest_permutation[i].Id] = plannedStation[i].GridPosition;
         }
 
