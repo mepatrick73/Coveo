@@ -1,5 +1,5 @@
-﻿using System.Numerics;
-
+using System.Numerics;
+using Application.Actions;
 namespace Application;
 
 public class Bot
@@ -17,6 +17,7 @@ public class Bot
     public Bot()
     {
         Console.WriteLine("Initializing your super mega bot!");
+        
     }
 
     /// <summary>
@@ -24,9 +25,34 @@ public class Bot
     /// </summary>
     public IEnumerable<Action> GetNextMoves(GameMessage gameMessage)
     {
-        this.gameMessage = gameMessage;
-
         var actions = new List<Action>();
+        this.gameMessage = gameMessage;
+    //     string our_team = gameMessage.CurrentTeamId;
+    //     Ship ship = gameMessage.Ships[our_team];
+    //     List<Crewmate> crew = ship.Crew.ToList();
+    //     Console.WriteLine(ship.Stations.Turrets);
+    //     
+    // var turretStations = ship.Stations.Turrets
+    //     .Where(turret =>
+    //         turret.TurretType == TurretType.EMP ||
+    //         turret.TurretType == TurretType.Sniper ||
+    //         turret.TurretType == TurretType.Fast ||
+    //         turret.TurretType == TurretType.Normal||
+    //         turret.TurretType == TurretType.Cannon)
+    //     .GroupBy(turret => turret.TurretType)
+    //     .SelectMany(group => group.Take(1))
+    //     .ToList();
+    // Console.WriteLine(turretStations.ToString());
+    // Console.WriteLine("yoooooo");
+    //     var crewmateManager = new CrewmateManager(crew,turretStations);
+    //     List<Station> turret_dict = new List<Station>();
+    //     turret_dict.AddRange(turretStations);
+    //     Tuple<ActionGroup, int> temp = crewmateManager.moveCrewmates(turret_dict);
+    //         foreach (var t_action in temp.Item1.GetActions())
+    //         {
+    //             actions.Add(t_action);
+    //         }
+        
 
         Debris[] targetableMeteors = gameMessage.Debris.Where(DebrisInfos => DebrisInfos.TeamId == null).ToArray();
 
