@@ -218,12 +218,11 @@ public class Bot
         return (projectile.Position.X + projectile.Velocity.X * t, projectile.Position.Y + projectile.Velocity.Y * t);
     }
 
-    private List<Action> PositionWeaponTowardsFirstEnemy()
+    private List<Action> PositionWeaponTowardsFirstEnemy(Vector enemyPosition)
     {
         try
         {
-            var enemyShip = gameMessage.Ships.Where(ship => ship.Key != gameMessage.CurrentTeamId).ToList()
-                .First(ship => ship.Value.CurrentHealth > 0).Value;
+            var enemyShip = enemyPosition;
 
             var weaponToShootFrom = gameMessage.Ships[gameMessage.CurrentTeamId].Stations.Turrets.Where(turret =>
                 !gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType].Rotatable).ToList().First();
@@ -231,11 +230,11 @@ public class Bot
             var ownShipPosition = gameMessage.Ships[gameMessage.CurrentTeamId].WorldPosition;
 
             var actions = new List<Action>();
-            if (Math.Abs(MathUtil.AngleBetween(MathUtil.Subtract(enemyShip.WorldPosition, ownShipPosition),
+            if (Math.Abs(MathUtil.AngleBetween(MathUtil.Subtract(enemyShip, ownShipPosition),
                     MathUtil.Subtract(weaponToShootFrom.WorldPosition, ownShipPosition))) > 1e-3f)
             {
                 actions.Add(new ShipRotateAction(Math.Abs(MathUtil.AngleBetween(
-                    MathUtil.Subtract(enemyShip.WorldPosition, ownShipPosition),
+                    MathUtil.Subtract(enemyShip, ownShipPosition),
                     MathUtil.Subtract(weaponToShootFrom.WorldPosition, ownShipPosition)))));
             }
 
