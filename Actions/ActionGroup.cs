@@ -33,6 +33,8 @@ public class TurretUtil
 {
     public static int ShootingTurn(GameMessage gameState, List<TurretStation> turrets)
     {
+        if (turrets.Count == 0)
+            return 0;
         int chargingTurns = 0;
         double totalShieldDamage = 0;
         while(true)
@@ -70,6 +72,50 @@ public class MathUtil
     public static double Dot(Vector a, Vector b)
     {
         return a.X * b.X + a.Y * b.Y;
+    }
+    
+    public static double Distance(Vector a, Vector b)
+    {
+        return Math.Sqrt(Math.Pow(a.X - b.X, 2) + Math.Pow(a.Y - b.Y, 2));
+    }
+    
+    public static Vector Normalize(Vector a)
+    {
+        var length = Math.Sqrt(Math.Pow(a.X, 2) + Math.Pow(a.Y, 2));
+        return new Vector(a.X / length, a.Y / length);
+    }
+    
+    public static Vector Rotate(Vector a, double angle)
+    {
+        var radians = angle * Math.PI / 180;
+        var cos = Math.Cos(radians);
+        var sin = Math.Sin(radians);
+        return new Vector(a.X * cos - a.Y * sin, a.X * sin + a.Y * cos);
+    }
+    
+    public static Vector Subtract(Vector a, Vector b)
+    {
+        return new Vector(a.X - b.X, a.Y - b.Y);
+    }
+    
+    public static Vector Add(Vector a, Vector b)
+    {
+        return new Vector(a.X + b.X, a.Y + b.Y);
+    }
+    
+    public static Vector Multiply(Vector a, double b)
+    {
+        return new Vector(a.X * b, a.Y * b);
+    }
+    
+    public static double Length(Vector a)
+    {
+        return Math.Sqrt(Math.Pow(a.X, 2) + Math.Pow(a.Y, 2));
+    }
+    
+    public static double LengthSquared(Vector a)
+    {
+        return Math.Pow(a.X, 2) + Math.Pow(a.Y, 2);
     }
 }
 

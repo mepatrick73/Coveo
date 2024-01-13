@@ -1,5 +1,6 @@
 using System.Numerics;
 using Application.Actions;
+
 namespace Application;
 
 public class Bot
@@ -68,7 +69,7 @@ public class Bot
         var ourShip = this.gameMessage.Ships[gameMessage.CurrentTeamId];
         foreach (var turret in ourShip.Stations.Turrets.Where(turret => turret.Operator != null))
         {
-            FindBestTarget(turret,gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType],untargetedTargetableMeteors,out (double x,double y ) shotPosition);
+            FindBestTarget(turret,gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType],untargetedTargetableMeteors,out (double x,double y ) shotPosition, ourShip.WorldPosition, gameMessage.Constants.Ship.Stations.Shield.ShieldRadius);
             if (shotPosition is { x: 0, y: 0 })
             {
                 return Array.Empty<Action>();
@@ -122,7 +123,7 @@ public class Bot
         }
     }
 
-    private void FindBestTarget(TurretStation turretStation, TurretInfo turret,Debris[] targetableMeteors, out (double x, double y ) shotPosition)
+    private void FindBestTarget(TurretStation turretStation, TurretInfo turret,Debris[] targetableMeteors, out (double x, double y ) shotPosition, Vector shipPosition, double shipRadius)
     {
         var validShots = new List<Shot>();
 
@@ -138,7 +139,7 @@ public class Bot
                 var distancesInCannonTicks = Distance(nextPosition, (rocketPosition.WorldPosition.X, rocketPosition.WorldPosition.Y)) /
                                              turret.RocketSpeed;
 
-                if (distancesInCannonTicks < currentTick && isInBounds(nextPosition) && willCollide())
+                if (distancesInCannonTicks < currentTick && isInBounds(nextPosition) && WillCollide(shipPosition, shipRadius, meteor))
                 {
                     validShots.Add(new Shot()
                     {
@@ -176,6 +177,26 @@ public class Bot
         }
     }
 
+    private bool WillCollide(Vector shipPosition, double shipRadius, Debris meteor)
+    {
+        double meteorRadius = gameMessage.Constants.DebrisInfos[meteor.DebrisType].Radius;
+        Vector meteorPosition = meteor.Position;
+        Vector meteorVelocity = meteor.Velocity;
+
+        // Calculate the time of collision using relative velocity
+        double timeToCollision = MathUtil.Dot(MathUtil.Subtract(shipPosition, meteorPosition), meteorVelocity) / MathUtil.LengthSquared(meteorVelocity);
+
+        // Calculate the predicted position of the meteor at the time of collision
+        Vector predictedMeteorPosition = MathUtil.Add(meteorPosition, MathUtil.Multiply(meteorVelocity, timeToCollision));
+
+        // Check if the distance between the ship and predicted meteor position is less than the sum of their radii
+        double distance = MathUtil.Length(MathUtil.Subtract(predictedMeteorPosition, shipPosition));
+        double combinedRadii = shipRadius + meteorRadius;
+
+        return distance < combinedRadii;
+    }
+
+
     private (double x, double y) Velocity((double x, double y) position1, (double x, double y) position2, double t)
     {
         double vx = (position2.x - position1.x) / t;
@@ -205,6 +226,25 @@ public class Bot
     private (double x, double y) PositionAt(Projectile projectile, int t)
     {
         return (projectile.Position.X + projectile.Velocity.X * t, projectile.Position.Y + projectile.Velocity.Y * t);
+    }
+
+    private List<Action> PositionWeaponTowardsFirstEnemy()
+    {
+        var enemyShip = gameMessage.Ships.Where(ship => ship.Key != gameMessage.CurrentTeamId).ToList().First(ship =>ship.Value.CurrentHealth > 0).Value;
+        var weaponToShootFrom = gameMessage.Ships[gameMessage.CurrentTeamId].Stations.Turrets.Where(turret => !gameMessage.Constants.Ship.Stations.TurretInfos[turret.TurretType].Rotatable && turret.Operator != null).ToList().First();
+        var weaponAngle = weaponToShootFrom.OrientationDegrees;
+        var ownShipPosition = gameMessage.Ships[gameMessage.CurrentTeamId].WorldPosition;
+
+        var actions = new List<Action>();
+        while (MathUtil.AngleBetween(ownShipPosition, enemyShip.WorldPosition) !=
+               MathUtil.AngleBetween(weaponToShootFrom.WorldPosition, enemyShip.WorldPosition))
+        {
+            actions.Add(new ShipRotateAction(Math.Abs(MathUtil.AngleBetween(ownShipPosition, enemyShip.WorldPosition)
+                                                      - MathUtil.AngleBetween(weaponToShootFrom.WorldPosition,
+                                                          enemyShip.WorldPosition))));
+        }
+        
+        return actions;
     }
 
     class DebrisEqualityComparer : IEqualityComparer<Debris>
